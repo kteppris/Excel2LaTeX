@@ -17,7 +17,10 @@ The GUI can be change with the QT creator to add new features.
 
 ## Installation
 
-
+```bash
+pip install .
+```
+or
 
 ```bash
 pip install -r requirements.txt
