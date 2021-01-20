@@ -1,0 +1,154 @@
+import sys
+from qtpy import QtWidgets
+import pandas as pd
+from ui.mainwindow import Ui_MainWindow
+from ui.model import Model
+import qtmodern.styles
+import qtmodern.windows
+from ui.model import Table
+import numpy as np
+
+class MainWindowUIClass(Ui_MainWindow):
+    def __init__(self):
+        '''
+        Initialize the super class
+        '''
+
+        super().__init__()
+        self.model = Model()
+
+    def setupUi(self, MW):
+        '''
+        Setup the UI of the super class, and add here code
+        that relates to the way we want our UI to operate.
+        '''
+        super().setupUi(MW)
+
+        # close the lower part of the splitter to hide the
+        # debug window under normal operations
+        self.splitter.setSizes([300, 0])
+
+    def debugPrint(self, msg):
+        '''
+        Print the message in the text edit at the bottom of the
+        horizontal splitter.
+        '''
+        self.debugTextBrowser.append(msg)
+
+    def refreshAll(self, create=True):
+        '''
+        Updates the widgets whenever an interaction happens.
+        Typically some interaction takes place, the UI responds,
+        and informs the model of the change.  Then this method
+        is called, pulling from the model information that is
+        updated in the GUI.
+        '''
+        self.debugPrint( "Refreshing" )
+        self.filePath.setText(self.model.getFileName())
+        if create:
+            self.textEdit.setText(self.model.getFileContent())
+
+    def returnPressedSlot(self):
+        '''
+        Called when the user enters a string in the line edit and
+        presses the ENTER key.
+        '''
+        fileName = self.filePath.text()
+        if self.model.isValid(fileName):
+            self.model.setFileName(self.filePath.text())
+            self.refreshAll()
+        else:
+            m = QtWidgets.QMessageBox()
+            m.setText("Invalid file name!\n" + fileName)
+            m.setIcon(QtWidgets.QMessageBox.Warning)
+            m.setStandardButtons(QtWidgets.QMessageBox.Ok
+                                 | QtWidgets.QMessageBox.Cancel)
+            m.setDefaultButton(QtWidgets.QMessageBox.Cancel)
+            ret = m.exec_()
+            self.filePath.setText("")
+            self.refreshAll()
+            self.debugPrint("Invalid file specified: " + fileName)
+
+    def browseSlot(self):
+        '''
+        Called when the user presses the Browse button
+        '''
+        self.debugPrint( "Start Browsing" )
+        options = QtWidgets.QFileDialog.Options()
+#        options |= QtWidgets.QFileDialog.DontUseNativeDialog
+        fileName, _ = QtWidgets.QFileDialog.getOpenFileName(
+            None,
+            "File Browser",
+            "",
+            "Excel (*.xlsx *.xls *.csv *.xlsm *.xlsb *.odf *.ods)",
+            options=options)
+        if fileName:
+            self.debugPrint("setting file name: " + fileName)
+            self.model.setFileName(fileName)
+            self.refreshAll(create = False)
+
+    def multiSheetSlot(self):
+        '''
+        Slot for the signal from the multiSheet checkbox
+        '''
+        self.debugPrint("Activate multiple Sheets")
+        self.model.activateMultiSheet()
+
+    def createLaTeX(self):
+        '''
+        Updates the data and creates a LaTeX Table from it. The logic behind it is completly in the Model and Table class
+        '''
+        self.debugPrint("Creating LaTeX")
+
+        self.model.setEndline(self.endline.text())
+        self.debugPrint("setting endline: " + self.model.endline)
+
+        self.model.setMultiSheet(self.sheetname.text())
+        self.debugPrint("setting sheetname: " + self.model.sheetName)
+
+        self.model.setIndex(self.index.isChecked())
+        self.debugPrint("setting index option to: {0}".format(str(self.model.index)))
+
+        self.model.setHlineAll(self.hlineAll.isChecked())
+        self.debugPrint("settig hline all option to: {0}".format(str(self.model.hlineAll)))
+
+        self.model.setHlineOutside(self.hlineOutside.isChecked())
+        self.debugPrint("settig hline outside option to: {0}".format(str(self.model.hlineOutside)))
+
+        self.model.setFileType()
+        self.debugPrint("setting filetype: " + self.model.fileType)
+
+        self.model.setDelimiter(str(self.delimiter.currentText()))
+        self.debugPrint("setting filetype: " + self.model.delimiter)
+
+        self.model.setRoundBy(str(self.roundBy.currentText()))
+        self.debugPrint("setting Round option to: " + str(self.model.roundBy))
+
+        self.model.makeTable()
+        self.debugPrint("finished LaTeX table" )
+        self.refreshAll()
+
+
+
+
+
+
+def main():
+    """
+    This is the MAIN ENTRY POINT of our application.  The code at the end
+    of the mainwindow.py script will not be executed, since this script is now
+    our main program.   We have simply copied the code from mainwindow.py here
+    since it was automatically generated by '''pyuic5'''.
+
+    """
+    app = QtWidgets.QApplication(sys.argv)
+    MainWindow = QtWidgets.QMainWindow()
+    ui = MainWindowUIClass()
+    ui.setupUi(MainWindow)
+    qtmodern.styles.dark(app)
+    mw = qtmodern.windows.ModernWindow(MainWindow)
+    mw.show()
+    sys.exit(app.exec_())
+
+
+main()
