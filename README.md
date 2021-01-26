@@ -36,5 +36,6 @@ Pull requests are welcome. For major changes, please open an issue first to disc
 
 Please make sure to update tests as appropriate.
 
+I'm still learning, if there are any mistakes, please let me know !
 ## License
 [GPL](https://www.gnu.org/licenses/why-not-lgpl.html)
